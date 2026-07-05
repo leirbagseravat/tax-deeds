@@ -25,18 +25,26 @@ type Storage interface {
 	Download(ctx context.Context, object string) (io.ReadCloser, error)
 }
 
+// OCRDispatcher hands a converted document to the OCR service. pageObjects is
+// ordered by page number.
+type OCRDispatcher interface {
+	DispatchOCRJob(ctx context.Context, documentID, bucket string, pageObjects []string) error
+}
+
 // Service runs the ingestion pipeline.
 type Service struct {
-	log       *slog.Logger
-	docs      *store.Documents
-	storage   Storage
-	converter pdfconvert.Converter
+	log        *slog.Logger
+	docs       *store.Documents
+	ocrResults *store.OCR
+	storage    Storage
+	converter  pdfconvert.Converter
+	dispatcher OCRDispatcher
 
 	wg sync.WaitGroup
 }
 
-func New(log *slog.Logger, docs *store.Documents, storage Storage, converter pdfconvert.Converter) *Service {
-	return &Service{log: log, docs: docs, storage: storage, converter: converter}
+func New(log *slog.Logger, docs *store.Documents, ocrResults *store.OCR, storage Storage, converter pdfconvert.Converter, dispatcher OCRDispatcher) *Service {
+	return &Service{log: log, docs: docs, ocrResults: ocrResults, storage: storage, converter: converter, dispatcher: dispatcher}
 }
 
 func pdfObject(id string) string  { return fmt.Sprintf("documents/%s/original.pdf", id) }
@@ -134,8 +142,32 @@ func (s *Service) process(ctx context.Context, id string) error {
 	if err := s.docs.SetPageCount(ctx, id, len(objects)); err != nil {
 		return fmt.Errorf("record page count: %w", err)
 	}
-	s.log.Info("document ingested", "document_id", id, "pages", len(objects))
+
+	if err := s.dispatcher.DispatchOCRJob(ctx, id, s.storage.Bucket(), objects); err != nil {
+		if _, ferr := s.docs.MarkFailed(ctx, id, store.StatusProcessing, "ocr_dispatch", err.Error()); ferr != nil {
+			s.log.Error("mark failed", "document_id", id, "error", ferr)
+		}
+		s.log.Error("ocr dispatch failed", "document_id", id, "error", err)
+		return nil // already marked failed with a more precise stage
+	}
+	if err := s.docs.SetOCRDispatched(ctx, id); err != nil {
+		return fmt.Errorf("record ocr dispatch: %w", err)
+	}
+	s.log.Info("document ingested and dispatched to ocr", "document_id", id, "pages", len(objects))
 	return nil
+}
+
+// OCRResults returns the document plus its OCR pages, for the read endpoint.
+func (s *Service) OCRResults(ctx context.Context, id string) (store.Document, []store.OCRResult, error) {
+	doc, err := s.docs.GetByID(ctx, id)
+	if err != nil {
+		return store.Document{}, nil, err
+	}
+	results, err := s.ocrResults.ResultsByDocument(ctx, id)
+	if err != nil {
+		return store.Document{}, nil, err
+	}
+	return doc, results, nil
 }
 
 func (s *Service) downloadTo(ctx context.Context, object, path string) error {

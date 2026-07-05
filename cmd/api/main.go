@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"mortgage/internal/clients/gcs"
+	"mortgage/internal/clients/ocr"
 	"mortgage/internal/config"
 	"mortgage/internal/handlers"
 	"mortgage/internal/routes"
@@ -52,8 +53,10 @@ func run() error {
 	defer storage.Close()
 
 	docs := store.NewDocuments(pool)
+	ocrResults := store.NewOCR(pool)
 	converter := &pdfconvert.Poppler{MaxPages: cfg.MaxPages}
-	ingestSvc := ingest.New(log, docs, storage, converter)
+	ocrClient := ocr.New(cfg.OCRServiceURL, cfg.OCRDispatchTimeout)
+	ingestSvc := ingest.New(log, docs, ocrResults, storage, converter, ocrClient)
 
 	mux := routes.NewMux(routes.Handlers{
 		Health: &handlers.Health{DB: pool},
@@ -62,6 +65,7 @@ func run() error {
 			Svc:            ingestSvc,
 			MaxUploadBytes: cfg.MaxUploadMB << 20,
 		},
+		OCR: &handlers.OCR{Log: log, Svc: ingestSvc},
 	})
 
 	srv := &http.Server{

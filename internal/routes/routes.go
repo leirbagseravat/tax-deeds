@@ -11,6 +11,7 @@ import (
 type Handlers struct {
 	Health    *handlers.Health
 	Documents *handlers.Documents
+	OCR       *handlers.OCR
 }
 
 // NewMux registers every route and returns the mux.
@@ -22,6 +23,7 @@ func NewMux(h Handlers) *http.ServeMux {
 
 	mux.HandleFunc("POST /api/v1/documents", h.Documents.Upload)
 	mux.HandleFunc("GET /api/v1/documents/{id}", h.Documents.Get)
+	mux.HandleFunc("GET /api/v1/documents/{id}/ocr", h.OCR.Get)
 
 	return mux
 }

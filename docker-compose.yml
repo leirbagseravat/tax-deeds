@@ -21,5 +21,19 @@ services:
     ports:
       - "4443:4443"
 
+  # Dev stand-in for the Python OCR service (see docs/ocr-contract.md).
+  ocr-stub:
+    build:
+      context: .
+      dockerfile: Dockerfile.ocr-stub
+    environment:
+      DATABASE_URL: postgres://ocr_service:ocr_service@postgres:5432/mortgage?sslmode=disable
+      PORT: "9090"
+    ports:
+      - "9090:9090"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:
