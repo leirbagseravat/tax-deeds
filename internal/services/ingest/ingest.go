@@ -47,7 +47,7 @@ func New(log *slog.Logger, docs *store.Documents, ocrResults *store.OCR, storage
 	return &Service{log: log, docs: docs, ocrResults: ocrResults, storage: storage, converter: converter, dispatcher: dispatcher}
 }
 
-func pdfObject(id string) string  { return fmt.Sprintf("documents/%s/original.pdf", id) }
+func pdfObject(id string) string { return fmt.Sprintf("documents/%s/original.pdf", id) }
 func pageObject(id string, n int) string {
 	return fmt.Sprintf("documents/%s/pages/%04d.png", id, n)
 }

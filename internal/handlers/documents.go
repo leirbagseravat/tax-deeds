@@ -73,5 +73,19 @@ func (h *Documents) Get(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, http.StatusInternalServerError, "internal", "could not load the document")
 		return
 	}
-	response.JSON(w, http.StatusOK, dto.DocumentFromStore(doc))
+	response.JSON(w, http.StatusOK, documentResponse(doc))
+}
+
+// documentResponse maps a store row to its API representation.
+func documentResponse(d store.Document) dto.DocumentResponse {
+	return dto.DocumentResponse{
+		ID:           d.ID,
+		Filename:     d.Filename,
+		Status:       d.Status,
+		PageCount:    d.PageCount,
+		FailedStage:  d.FailedStage,
+		ErrorMessage: d.ErrorMessage,
+		CreatedAt:    d.CreatedAt,
+		UpdatedAt:    d.UpdatedAt,
+	}
 }
