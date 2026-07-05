@@ -9,7 +9,8 @@ import (
 
 // Handlers groups the handler dependencies needed to build the mux.
 type Handlers struct {
-	Health *handlers.Health
+	Health    *handlers.Health
+	Documents *handlers.Documents
 }
 
 // NewMux registers every route and returns the mux.
@@ -18,6 +19,9 @@ func NewMux(h Handlers) *http.ServeMux {
 
 	mux.HandleFunc("GET /healthz", h.Health.Healthz)
 	mux.HandleFunc("GET /readyz", h.Health.Readyz)
+
+	mux.HandleFunc("POST /api/v1/documents", h.Documents.Upload)
+	mux.HandleFunc("GET /api/v1/documents/{id}", h.Documents.Get)
 
 	return mux
 }

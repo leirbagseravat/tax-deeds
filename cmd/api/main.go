@@ -11,9 +11,12 @@ import (
 	"syscall"
 	"time"
 
+	"mortgage/internal/clients/gcs"
 	"mortgage/internal/config"
 	"mortgage/internal/handlers"
 	"mortgage/internal/routes"
+	"mortgage/internal/services/ingest"
+	"mortgage/internal/services/pdfconvert"
 	"mortgage/internal/store"
 	"mortgage/pkg/logger"
 	"mortgage/pkg/middleware"
@@ -42,8 +45,23 @@ func run() error {
 	}
 	defer pool.Close()
 
+	storage, err := gcs.New(ctx, cfg.GCSBucket)
+	if err != nil {
+		return err
+	}
+	defer storage.Close()
+
+	docs := store.NewDocuments(pool)
+	converter := &pdfconvert.Poppler{MaxPages: cfg.MaxPages}
+	ingestSvc := ingest.New(log, docs, storage, converter)
+
 	mux := routes.NewMux(routes.Handlers{
 		Health: &handlers.Health{DB: pool},
+		Documents: &handlers.Documents{
+			Log:            log,
+			Svc:            ingestSvc,
+			MaxUploadBytes: cfg.MaxUploadMB << 20,
+		},
 	})
 
 	srv := &http.Server{
@@ -69,5 +87,13 @@ func run() error {
 	log.Info("shutting down")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	return srv.Shutdown(shutdownCtx)
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		return err
+	}
+	// Wait for in-flight background ingestion; the janitor recovers anything
+	// that doesn't finish in time.
+	if err := ingestSvc.Shutdown(shutdownCtx); err != nil {
+		log.Warn("background work did not finish before shutdown", "error", err)
+	}
+	return nil
 }
