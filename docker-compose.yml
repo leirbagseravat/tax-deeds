@@ -21,7 +21,6 @@ services:
     ports:
       - "4443:4443"
 
-  # Dev stand-in for the Python OCR service (see docs/ocr-contract.md).
   ocr-stub:
     build:
       context: .
