@@ -25,17 +25,19 @@ var ErrNotFound = errors.New("not found")
 
 // Document is a row of the documents table.
 type Document struct {
-	ID              string
-	Filename        string
-	Status          string
-	FailedStage     *string
-	ErrorMessage    *string
-	PageCount       *int
-	GCSBucket       string
-	GCSPDFObject    string
-	OCRDispatchedAt *time.Time
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	ID                 string
+	Filename           string
+	Status             string
+	FailedStage        *string
+	ErrorMessage       *string
+	PageCount          *int
+	GCSBucket          string
+	GCSPDFObject       string
+	OCRDispatchedAt    *time.Time
+	ExtractionAttempts int
+	NextExtractionAt   *time.Time
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
 }
 
 // Page is a row of the pages table.
@@ -56,12 +58,12 @@ func NewDocuments(pool *pgxpool.Pool) *Documents {
 }
 
 const documentColumns = `id::text, filename, status, failed_stage, error_message, page_count,
-	gcs_bucket, gcs_pdf_object, ocr_dispatched_at, created_at, updated_at`
+	gcs_bucket, gcs_pdf_object, ocr_dispatched_at, extraction_attempts, next_extraction_at, created_at, updated_at`
 
 func scanDocument(row pgx.Row) (Document, error) {
 	var d Document
 	err := row.Scan(&d.ID, &d.Filename, &d.Status, &d.FailedStage, &d.ErrorMessage, &d.PageCount,
-		&d.GCSBucket, &d.GCSPDFObject, &d.OCRDispatchedAt, &d.CreatedAt, &d.UpdatedAt)
+		&d.GCSBucket, &d.GCSPDFObject, &d.OCRDispatchedAt, &d.ExtractionAttempts, &d.NextExtractionAt, &d.CreatedAt, &d.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Document{}, ErrNotFound
 	}
@@ -159,4 +161,80 @@ func (s *Documents) SetOCRDispatched(ctx context.Context, id string) error {
 	_, err := s.pool.Exec(ctx,
 		`UPDATE documents SET ocr_dispatched_at = now(), updated_at = now() WHERE id = $1::uuid`, id)
 	return err
+}
+
+// ClaimForExtraction atomically claims one document ready for LLM extraction,
+// moving it to "extracting" and counting the attempt. SKIP LOCKED makes this
+// safe across replicas. Returns ok=false when nothing is eligible.
+func (s *Documents) ClaimForExtraction(ctx context.Context, maxAttempts int) (Document, bool, error) {
+	row := s.pool.QueryRow(ctx, `
+		UPDATE documents
+		SET status = $2, extraction_attempts = extraction_attempts + 1, updated_at = now()
+		WHERE id = (
+			SELECT id FROM documents
+			WHERE status = $1
+			  AND (next_extraction_at IS NULL OR next_extraction_at <= now())
+			  AND extraction_attempts < $3
+			ORDER BY updated_at
+			FOR UPDATE SKIP LOCKED
+			LIMIT 1
+		)
+		RETURNING `+documentColumns,
+		StatusOCRDone, StatusExtracting, maxAttempts)
+	doc, err := scanDocument(row)
+	if errors.Is(err, ErrNotFound) {
+		return Document{}, false, nil
+	}
+	if err != nil {
+		return Document{}, false, err
+	}
+	return doc, true, nil
+}
+
+// ReturnForRetry sends a document that failed extraction transiently back to
+// the queue, eligible again after the backoff.
+func (s *Documents) ReturnForRetry(ctx context.Context, id string, backoff time.Duration) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE documents
+		SET status = $2, next_extraction_at = now() + $3, updated_at = now()
+		WHERE id = $1::uuid AND status = $4`,
+		id, StatusOCRDone, backoff, StatusExtracting)
+	return err
+}
+
+// FailExhausted marks documents that ran out of extraction attempts.
+func (s *Documents) FailExhausted(ctx context.Context, maxAttempts int) (int64, error) {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE documents
+		SET status = $1, failed_stage = 'extraction',
+		    error_message = 'extraction attempts exhausted', updated_at = now()
+		WHERE status = $2 AND extraction_attempts >= $3`,
+		StatusFailed, StatusOCRDone, maxAttempts)
+	if err != nil {
+		return 0, err
+	}
+	return tag.RowsAffected(), nil
+}
+
+// StuckDocuments lists non-terminal documents that stopped making progress —
+// the input of the janitor.
+func (s *Documents) StuckDocuments(ctx context.Context, olderThan time.Duration) ([]Document, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT `+documentColumns+` FROM documents
+		WHERE status IN ($1, $2) AND updated_at < $3
+		ORDER BY updated_at`,
+		StatusProcessing, StatusExtracting, time.Now().Add(-olderThan))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var docs []Document
+	for rows.Next() {
+		d, err := scanDocument(rows)
+		if err != nil {
+			return nil, err
+		}
+		docs = append(docs, d)
+	}
+	return docs, rows.Err()
 }

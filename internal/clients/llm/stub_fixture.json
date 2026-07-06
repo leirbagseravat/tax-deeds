@@ -1,0 +1,100 @@
+{
+  "numero": "45.678",
+  "cartorio": {
+    "nome": "1º Oficial de Registro de Imóveis",
+    "comarca": "São Paulo",
+    "uf": "SP"
+  },
+  "data_abertura": "1998-03-12",
+  "imovel": {
+    "descricao": "Apartamento nº 42, 4º andar do Edifício Solar das Acácias, área privativa de 85,32 m², área comum de 42,10 m², área construída total de 127,42 m², fração ideal de 0,7523% no terreno condominial, contribuinte nº 041.077.0042-1",
+    "endereco": "Rua das Figueiras, nº 1.200, Vila Mariana, São Paulo - SP",
+    "area_m2": 127.42,
+    "tipo": "apartamento"
+  },
+  "atos": [
+    {
+      "numero": "R-1",
+      "kind": "registro",
+      "tipo": "compra_venda",
+      "data": "1998-03-12",
+      "valor": 180000.0,
+      "moeda": "BRL",
+      "descricao": "Compra e venda: Construtora Horizonte Ltda vende a José Carlos Almeida e Maria Helena Almeida",
+      "partes": [
+        {"papel": "transmitente", "nome": "Construtora Horizonte Ltda", "cpf_cnpj": "60.111.222/0001-33", "tipo_pessoa": "juridica"},
+        {"papel": "adquirente", "nome": "José Carlos Almeida", "cpf_cnpj": "123.456.789-09", "tipo_pessoa": "fisica"},
+        {"papel": "adquirente", "nome": "Maria Helena Almeida", "cpf_cnpj": "987.654.321-00", "tipo_pessoa": "fisica"}
+      ]
+    },
+    {
+      "numero": "R-2",
+      "kind": "registro",
+      "tipo": "hipoteca",
+      "data": "1998-03-20",
+      "valor": 120000.0,
+      "moeda": "BRL",
+      "descricao": "Primeira e especial hipoteca ao Banco Nacional de Crédito S/A em garantia de financiamento",
+      "partes": [
+        {"papel": "credor", "nome": "Banco Nacional de Crédito S/A", "cpf_cnpj": "33.444.555/0001-66", "tipo_pessoa": "juridica"},
+        {"papel": "devedor", "nome": "José Carlos Almeida", "cpf_cnpj": "123.456.789-09", "tipo_pessoa": "fisica"},
+        {"papel": "devedor", "nome": "Maria Helena Almeida", "cpf_cnpj": "987.654.321-00", "tipo_pessoa": "fisica"}
+      ]
+    },
+    {
+      "numero": "AV-3",
+      "kind": "averbacao",
+      "tipo": "cancelamento",
+      "data": "2010-06-15",
+      "descricao": "Cancelamento da hipoteca objeto de R-2, quitação integral da dívida"
+    },
+    {
+      "numero": "R-4",
+      "kind": "registro",
+      "tipo": "compra_venda",
+      "data": "2015-08-03",
+      "valor": 650000.0,
+      "moeda": "BRL",
+      "descricao": "Compra e venda: José Carlos Almeida e Maria Helena Almeida vendem a Fernanda Costa Ribeiro",
+      "partes": [
+        {"papel": "transmitente", "nome": "José Carlos Almeida", "cpf_cnpj": "123.456.789-09", "tipo_pessoa": "fisica"},
+        {"papel": "transmitente", "nome": "Maria Helena Almeida", "cpf_cnpj": "987.654.321-00", "tipo_pessoa": "fisica"},
+        {"papel": "adquirente", "nome": "Fernanda Costa Ribeiro", "cpf_cnpj": "111.222.333-96", "tipo_pessoa": "fisica"}
+      ]
+    },
+    {
+      "numero": "R-5",
+      "kind": "registro",
+      "tipo": "alienacao_fiduciaria",
+      "data": "2015-08-03",
+      "valor": 450000.0,
+      "moeda": "BRL",
+      "descricao": "Alienação fiduciária ao Banco Moradia S/A em garantia de financiamento imobiliário, Lei 9.514/97",
+      "partes": [
+        {"papel": "credor", "nome": "Banco Moradia S/A", "cpf_cnpj": "77.888.999/0001-11", "tipo_pessoa": "juridica"},
+        {"papel": "devedor", "nome": "Fernanda Costa Ribeiro", "cpf_cnpj": "111.222.333-96", "tipo_pessoa": "fisica"}
+      ]
+    },
+    {
+      "numero": "AV-6",
+      "kind": "averbacao",
+      "tipo": "penhora",
+      "data": "2020-02-10",
+      "valor": 38500.0,
+      "moeda": "BRL",
+      "descricao": "Penhora nos autos do processo 0012345-67.2019.8.26.0100, 3ª Vara Cível de São Paulo, exequente Condomínio Edifício Solar das Acácias",
+      "partes": [
+        {"papel": "credor", "nome": "Condomínio Edifício Solar das Acácias", "cpf_cnpj": "55.666.777/0001-88", "tipo_pessoa": "juridica"},
+        {"papel": "devedor", "nome": "Fernanda Costa Ribeiro", "cpf_cnpj": "111.222.333-96", "tipo_pessoa": "fisica"}
+      ]
+    }
+  ],
+  "proprietarios": [
+    {"nome": "Fernanda Costa Ribeiro", "cpf_cnpj": "111.222.333-96", "tipo_pessoa": "fisica", "fracao": 1.0, "ato_aquisicao": "R-4"}
+  ],
+  "onus": [
+    {"tipo": "hipoteca", "ato_constituicao": "R-2", "ato_cancelamento": "AV-3", "credor": "Banco Nacional de Crédito S/A", "valor": 120000.0, "moeda": "BRL", "descricao": "Hipoteca de financiamento, cancelada por AV-3"},
+    {"tipo": "alienacao_fiduciaria", "ato_constituicao": "R-5", "credor": "Banco Moradia S/A", "valor": 450000.0, "moeda": "BRL", "descricao": "Propriedade fiduciária em garantia de financiamento imobiliário"},
+    {"tipo": "penhora", "ato_constituicao": "AV-6", "credor": "Condomínio Edifício Solar das Acácias", "valor": 38500.0, "moeda": "BRL", "descricao": "Penhora judicial, processo 0012345-67.2019.8.26.0100"}
+  ]
+}

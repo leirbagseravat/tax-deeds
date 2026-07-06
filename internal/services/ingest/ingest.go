@@ -157,6 +157,29 @@ func (s *Service) process(ctx context.Context, id string) error {
 	return nil
 }
 
+// Redispatch re-sends the OCR job for a document whose pages are already in
+// the bucket — the janitor's answer to a lost job.
+func (s *Service) Redispatch(ctx context.Context, id string) {
+	pages, err := s.docs.PagesByDocument(ctx, id)
+	if err != nil || len(pages) == 0 {
+		s.log.Error("redispatch: load pages", "document_id", id, "error", err)
+		return
+	}
+	objects := make([]string, len(pages))
+	for i, p := range pages {
+		objects[i] = p.GCSObject
+	}
+	if err := s.dispatcher.DispatchOCRJob(ctx, id, s.storage.Bucket(), objects); err != nil {
+		if _, ferr := s.docs.MarkFailed(ctx, id, store.StatusProcessing, "ocr_dispatch", err.Error()); ferr != nil {
+			s.log.Error("mark failed", "document_id", id, "error", ferr)
+		}
+		return
+	}
+	if err := s.docs.SetOCRDispatched(ctx, id); err != nil {
+		s.log.Error("record ocr redispatch", "document_id", id, "error", err)
+	}
+}
+
 // OCRResults returns the document plus its OCR pages, for the read endpoint.
 func (s *Service) OCRResults(ctx context.Context, id string) (store.Document, []store.OCRResult, error) {
 	doc, err := s.docs.GetByID(ctx, id)

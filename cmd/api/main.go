@@ -12,10 +12,12 @@ import (
 	"time"
 
 	"mortgage/internal/clients/gcs"
+	"mortgage/internal/clients/llm"
 	"mortgage/internal/clients/ocr"
 	"mortgage/internal/config"
 	"mortgage/internal/handlers"
 	"mortgage/internal/routes"
+	"mortgage/internal/services/extraction"
 	"mortgage/internal/services/ingest"
 	"mortgage/internal/services/pdfconvert"
 	"mortgage/internal/store"
@@ -54,9 +56,27 @@ func run() error {
 
 	docs := store.NewDocuments(pool)
 	ocrResults := store.NewOCR(pool)
+	matriculas := store.NewMatriculas(pool)
 	converter := &pdfconvert.Poppler{MaxPages: cfg.MaxPages}
 	ocrClient := ocr.New(cfg.OCRServiceURL, cfg.OCRDispatchTimeout)
 	ingestSvc := ingest.New(log, docs, ocrResults, storage, converter, ocrClient)
+
+	// The extraction poller is optional: without a working LLM strategy the
+	// pipeline still runs and documents park at ocr_done.
+	if extractor, err := llm.New(cfg.LLMProvider, cfg.LLMModel); err != nil {
+		log.Warn("LLM extractor disabled; documents will stop at ocr_done", "error", err)
+	} else {
+		poller := &extraction.Poller{
+			Log:          log,
+			Docs:         docs,
+			Ingest:       ingestSvc,
+			Extraction:   extraction.NewService(log, docs, ocrResults, matriculas, extractor),
+			Interval:     cfg.PollInterval,
+			StuckTimeout: cfg.StuckTimeout,
+			MaxAttempts:  cfg.MaxExtractionAttempts,
+		}
+		go poller.Run(ctx)
+	}
 
 	mux := routes.NewMux(routes.Handlers{
 		Health: &handlers.Health{DB: pool},
