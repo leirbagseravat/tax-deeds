@@ -92,3 +92,28 @@ type MatriculaResponse struct {
 	DocumentID string `json:"document_id"`
 	ExtractedMatricula
 }
+
+// ProprietariosResponse lists current owners plus the cadeia dominial (the
+// ownership transfers, in timeline order, that led to them).
+type ProprietariosResponse struct {
+	MatriculaID    string         `json:"matricula_id"`
+	Numero         string         `json:"numero"`
+	Proprietarios  []Proprietario `json:"proprietarios"`
+	CadeiaDominial []Ato          `json:"cadeia_dominial"`
+}
+
+// AtosResponse lists a matrícula's acts, optionally filtered by kind.
+type AtosResponse struct {
+	MatriculaID string `json:"matricula_id"`
+	Numero      string `json:"numero"`
+	Kind        string `json:"kind,omitempty"`
+	Atos        []Ato  `json:"atos"`
+}
+
+// OnusResponse lists a matrícula's liens, optionally filtered by status.
+type OnusResponse struct {
+	MatriculaID string `json:"matricula_id"`
+	Numero      string `json:"numero"`
+	Status      string `json:"status,omitempty"`
+	Onus        []Onus `json:"onus"`
+}

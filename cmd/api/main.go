@@ -19,6 +19,7 @@ import (
 	"mortgage/internal/routes"
 	"mortgage/internal/services/extraction"
 	"mortgage/internal/services/ingest"
+	"mortgage/internal/services/matriculas"
 	"mortgage/internal/services/pdfconvert"
 	"mortgage/internal/store"
 	"mortgage/pkg/logger"
@@ -56,7 +57,7 @@ func run() error {
 
 	docs := store.NewDocuments(pool)
 	ocrResults := store.NewOCR(pool)
-	matriculas := store.NewMatriculas(pool)
+	matStore := store.NewMatriculas(pool)
 	converter := &pdfconvert.Poppler{MaxPages: cfg.MaxPages}
 	ocrClient := ocr.New(cfg.OCRServiceURL, cfg.OCRDispatchTimeout)
 	ingestSvc := ingest.New(log, docs, ocrResults, storage, converter, ocrClient)
@@ -70,7 +71,7 @@ func run() error {
 			Log:          log,
 			Docs:         docs,
 			Ingest:       ingestSvc,
-			Extraction:   extraction.NewService(log, docs, ocrResults, matriculas, extractor),
+			Extraction:   extraction.NewService(log, docs, ocrResults, matStore, extractor),
 			Interval:     cfg.PollInterval,
 			StuckTimeout: cfg.StuckTimeout,
 			MaxAttempts:  cfg.MaxExtractionAttempts,
@@ -85,7 +86,8 @@ func run() error {
 			Svc:            ingestSvc,
 			MaxUploadBytes: cfg.MaxUploadMB << 20,
 		},
-		OCR: &handlers.OCR{Log: log, Svc: ingestSvc},
+		OCR:        &handlers.OCR{Log: log, Svc: ingestSvc},
+		Matriculas: &handlers.Matriculas{Log: log, Svc: matriculas.New(docs, matStore)},
 	})
 
 	srv := &http.Server{
