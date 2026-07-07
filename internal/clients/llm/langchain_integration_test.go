@@ -17,7 +17,7 @@ func TestRealExtraction(t *testing.T) {
 	if os.Getenv("ANTHROPIC_API_KEY") == "" {
 		t.Skip("ANTHROPIC_API_KEY not set")
 	}
-	fixture, err := os.ReadFile("../../../cmd/ocr-stub/ocr_fixture.txt")
+	fixture, err := os.ReadFile("../../ocrengine/ocr_fixture.txt")
 	if err != nil {
 		t.Fatal(err)
 	}

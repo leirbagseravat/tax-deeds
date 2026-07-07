@@ -21,18 +21,32 @@ services:
     ports:
       - "4443:4443"
 
-  ocr-stub:
+  # Defaults to the stub engine. For real OCR against a model on the host
+  # (e.g. Ollama serving GLM-OCR):
+  #   OCR_ENGINE=glm GLM_BASE_URL=http://host.docker.internal:11434 \
+  #     docker compose up -d --build ocr
+  ocr:
     build:
       context: .
-      dockerfile: Dockerfile.ocr-stub
+      dockerfile: Dockerfile.ocr
     environment:
       DATABASE_URL: postgres://ocr_service:ocr_service@postgres:5432/mortgage?sslmode=disable
       PORT: "9090"
+      OCR_ENGINE: ${OCR_ENGINE:-stub}
+      STORAGE_EMULATOR_HOST: gcs:4443
+      GLM_BASE_URL: ${GLM_BASE_URL:-}
+      GLM_MODEL: ${GLM_MODEL:-}
+      GLM_API_KEY: ${GLM_API_KEY:-}
+      ZHIPU_API_KEY: ${ZHIPU_API_KEY:-}
     ports:
       - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy
+      gcs:
+        condition: service_started
 
 volumes:
   pgdata:

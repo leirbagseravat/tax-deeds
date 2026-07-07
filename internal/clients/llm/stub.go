@@ -12,8 +12,8 @@ import (
 var stubFixture []byte
 
 // stub is an offline strategy for local dev, demos and CI: it returns a
-// canned extraction matching cmd/ocr-stub's fixture text, so the whole
-// pipeline runs without an API key.
+// canned extraction matching the OCR stub engine's fixture text
+// (internal/ocrengine), so the whole pipeline runs without an API key.
 type stub struct{}
 
 func newStub() Extractor { return stub{} }

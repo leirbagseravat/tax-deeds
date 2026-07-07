@@ -3,7 +3,7 @@ SHELL := /bin/bash
 -include .env
 export
 
-.PHONY: run build test vet fmt up down migrate migrate-down migrate-status stub
+.PHONY: run build test vet fmt up down migrate migrate-down migrate-status ocr
 
 run:
 	go run ./cmd/api
@@ -11,7 +11,7 @@ run:
 build:
 	go build -o bin/api ./cmd/api
 	go build -o bin/migrate ./cmd/migrate
-	go build -o bin/ocr-stub ./cmd/ocr-stub
+	go build -o bin/ocr ./cmd/ocr
 
 test:
 	go test ./...
@@ -37,5 +37,5 @@ migrate-down:
 migrate-status:
 	go run ./cmd/migrate status
 
-stub:
-	go run ./cmd/ocr-stub
+ocr:
+	go run ./cmd/ocr

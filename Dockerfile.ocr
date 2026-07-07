@@ -3,8 +3,8 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -o /ocr-stub ./cmd/ocr-stub
+RUN CGO_ENABLED=0 go build -o /ocr ./cmd/ocr
 
 FROM gcr.io/distroless/static-debian12
-COPY --from=build /ocr-stub /ocr-stub
-ENTRYPOINT ["/ocr-stub"]
+COPY --from=build /ocr /ocr
+ENTRYPOINT ["/ocr"]

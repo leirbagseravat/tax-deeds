@@ -1,8 +1,11 @@
 # OCR Service Contract (v1)
 
-Contract between the Go orchestrator (this repo) and the Python OCR service.
-The stub at `cmd/ocr-stub` is a working reference implementation — when in
-doubt, do what the stub does.
+Contract between the Go orchestrator (this repo) and the OCR service.
+The worker at `cmd/ocr` implements it with pluggable engines
+(`OCR_ENGINE=stub|glm|glm-maas`; the real engines run
+[GLM-OCR](https://github.com/zai-org/GLM-OCR) via an OpenAI-compatible
+endpoint or Zhipu's hosted API). Any replacement service — in any language —
+must honor this document; when in doubt, do what `cmd/ocr` does.
 
 ## Transport: HTTP job dispatch
 
@@ -69,7 +72,18 @@ WHERE id = $1 AND status = 'processing';
 
 If the orchestrator sees a document stuck in `processing` longer than
 `STUCK_TIMEOUT` (default 10m) after dispatch, its janitor re-dispatches the
-job. Write results within that window or in an idempotent way.
+job. Write results within that window or in an idempotent way. (`cmd/ocr`
+bounds each job with `OCR_JOB_TIMEOUT`, default 8m — deliberately inside that
+window — and treats expiry as an unrecoverable failure.)
+
+## Failure semantics in cmd/ocr
+
+- A page that still fails after retries (image download or model call) marks
+  the document `failed` — terminal by design, so deterministic model errors
+  don't re-dispatch forever. Pages already upserted stay (harmless: upserts
+  are idempotent).
+- A failed **result write** flips nothing: the document stays `processing`
+  and the janitor re-dispatches the job.
 
 ## Versioning
 

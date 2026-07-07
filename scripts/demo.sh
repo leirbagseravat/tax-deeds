@@ -3,7 +3,7 @@
 # (ingest → OCR → LLM extraction), then walk the read API.
 #
 # Prerequisites — everything running locally:
-#   docker compose up -d          # postgres + fake-gcs (+ ocr-stub)
+#   docker compose up -d          # postgres + fake-gcs (+ ocr worker)
 #   make migrate
 #   LLM_PROVIDER=stub make run    # or a real ANTHROPIC_API_KEY
 #
