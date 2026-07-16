@@ -89,7 +89,7 @@ func TestExtractDocumentHappyPath(t *testing.T) {
 	ctx := context.Background()
 	id := seedOCRDoneDocument(t, pool)
 
-	stubEx, err := llm.New("stub", "")
+	stubEx, err := llm.New("stub", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}

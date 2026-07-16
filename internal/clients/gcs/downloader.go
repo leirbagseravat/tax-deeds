@@ -18,7 +18,10 @@ type Downloader struct {
 // NewDownloader connects to GCS (or the emulator when STORAGE_EMULATOR_HOST
 // is set). It does not ensure buckets exist: the ingest side creates them.
 func NewDownloader(ctx context.Context) (*Downloader, error) {
-	c, err := storage.NewClient(ctx)
+	// JSON reads for the same reason as New: the emulator's XML download
+	// path is host-sensitive, and this client runs inside compose where the
+	// emulator hostname (gcs:4443) differs from its -public-host.
+	c, err := storage.NewClient(ctx, storage.WithJSONReads())
 	if err != nil {
 		return nil, fmt.Errorf("gcs client: %w", err)
 	}

@@ -38,6 +38,27 @@ func TestParseExtractionRejectsEmptyNumero(t *testing.T) {
 	}
 }
 
+func TestParseExtractionRejectsBadEnums(t *testing.T) {
+	cases := map[string]string{
+		"papel":       `{"numero":"1","cartorio":{},"imovel":{},"atos":[{"numero":"R-1","kind":"registro","partes":[{"papel":"vendedor","nome":"X"}]}],"proprietarios":[],"onus":[]}`,
+		"kind":        `{"numero":"1","cartorio":{},"imovel":{},"atos":[{"numero":"R-1","kind":"matricula"}],"proprietarios":[],"onus":[]}`,
+		"tipo_pessoa": `{"numero":"1","cartorio":{},"imovel":{},"atos":[],"proprietarios":[{"nome":"X","tipo_pessoa":"empresa"}],"onus":[]}`,
+		"onus status": `{"numero":"1","cartorio":{},"imovel":{},"atos":[],"proprietarios":[],"onus":[{"tipo":"hipoteca","status":"vigente"}]}`,
+	}
+	for name, raw := range cases {
+		if _, err := parseExtraction(raw); err == nil {
+			t.Errorf("%s: invalid enum accepted", name)
+		}
+	}
+}
+
+func TestParseExtractionAcceptsUppercaseEnums(t *testing.T) {
+	raw := `{"numero":"1","cartorio":{},"imovel":{},"atos":[{"numero":"R-1","kind":"Registro","partes":[{"papel":"Adquirente","nome":"X"}]}],"proprietarios":[],"onus":[]}`
+	if _, err := parseExtraction(raw); err != nil {
+		t.Errorf("case-variant enum rejected: %v", err)
+	}
+}
+
 func TestParseExtractionRejectsProse(t *testing.T) {
 	if _, err := parseExtraction("desculpe, não consegui ler o documento"); err == nil {
 		t.Fatal("prose accepted")

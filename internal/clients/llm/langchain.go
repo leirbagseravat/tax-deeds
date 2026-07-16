@@ -9,6 +9,7 @@ import (
 
 	lcllms "github.com/tmc/langchaingo/llms"
 	lcanthropic "github.com/tmc/langchaingo/llms/anthropic"
+	lcollama "github.com/tmc/langchaingo/llms/ollama"
 
 	"mortgage/internal/dto"
 )
@@ -25,6 +26,21 @@ func newLangChainAnthropic(model string) (Extractor, error) {
 	l, err := lcanthropic.New(lcanthropic.WithModel(model))
 	if err != nil {
 		return nil, fmt.Errorf("langchain anthropic: %w", err)
+	}
+	return &langChain{llm: l, model: model}, nil
+}
+
+func newLangChainOllama(model, serverURL string) (Extractor, error) {
+	// Ollama's default context window (4096) is too small for the system
+	// prompt + OCR text + a reasoning model's thinking tokens; hitting it
+	// truncates the response mid-JSON and every extraction fails.
+	l, err := lcollama.New(
+		lcollama.WithModel(model),
+		lcollama.WithServerURL(serverURL),
+		lcollama.WithRunnerNumCtx(16384),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("langchain ollama: %w", err)
 	}
 	return &langChain{llm: l, model: model}, nil
 }
@@ -132,5 +148,52 @@ func parseExtraction(raw string) (dto.ExtractedMatricula, error) {
 	if m.Numero == "" {
 		return m, fmt.Errorf(`"numero" is empty`)
 	}
+	if err := validateEnums(m); err != nil {
+		return m, err
+	}
 	return m, nil
+}
+
+// validateEnums rejects values outside the closed vocabularies enforced by
+// the database schema, so the repair round can ask the model to correct them
+// instead of failing at persistence. Comparison is case-insensitive because
+// normalization lowercases these fields before insert.
+func validateEnums(m dto.ExtractedMatricula) error {
+	for _, a := range m.Atos {
+		if !enumOK(a.Kind, false, "registro", "averbacao") {
+			return fmt.Errorf(`ato %s: "kind" is %q (want registro or averbacao)`, a.Numero, a.Kind)
+		}
+		for _, p := range a.Partes {
+			if !enumOK(p.Papel, false, "transmitente", "adquirente", "credor", "devedor", "interessado") {
+				return fmt.Errorf(`ato %s, parte %q: "papel" is %q (want transmitente, adquirente, credor, devedor or interessado)`, a.Numero, p.Nome, p.Papel)
+			}
+			if !enumOK(p.TipoPessoa, true, "fisica", "juridica") {
+				return fmt.Errorf(`ato %s, parte %q: "tipo_pessoa" is %q (want fisica or juridica)`, a.Numero, p.Nome, p.TipoPessoa)
+			}
+		}
+	}
+	for _, p := range m.Proprietarios {
+		if !enumOK(p.TipoPessoa, true, "fisica", "juridica") {
+			return fmt.Errorf(`proprietario %q: "tipo_pessoa" is %q (want fisica or juridica)`, p.Nome, p.TipoPessoa)
+		}
+	}
+	for _, o := range m.Onus {
+		if !enumOK(o.Status, true, "ativo", "cancelado") {
+			return fmt.Errorf(`onus %q: "status" is %q (want ativo or cancelado)`, o.Tipo, o.Status)
+		}
+	}
+	return nil
+}
+
+func enumOK(v string, optional bool, allowed ...string) bool {
+	v = strings.ToLower(strings.TrimSpace(v))
+	if v == "" {
+		return optional
+	}
+	for _, a := range allowed {
+		if v == a {
+			return true
+		}
+	}
+	return false
 }

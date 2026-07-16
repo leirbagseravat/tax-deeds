@@ -1,4 +1,3 @@
-// Command api runs the mortgage orchestrator HTTP server.
 package main
 
 import (
@@ -64,7 +63,7 @@ func run() error {
 
 	// The extraction poller is optional: without a working LLM strategy the
 	// pipeline still runs and documents park at ocr_done.
-	if extractor, err := llm.New(cfg.LLMProvider, cfg.LLMModel); err != nil {
+	if extractor, err := llm.New(cfg.LLMProvider, cfg.LLMModel, cfg.LLMBaseURL); err != nil {
 		log.Warn("LLM extractor disabled; documents will stop at ocr_done", "error", err)
 	} else {
 		poller := &extraction.Poller{

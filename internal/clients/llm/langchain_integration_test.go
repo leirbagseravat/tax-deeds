@@ -26,7 +26,7 @@ func TestRealExtraction(t *testing.T) {
 	if model == "" {
 		model = "claude-sonnet-5"
 	}
-	ex, err := New("anthropic", model)
+	ex, err := New("anthropic", model, "")
 	if err != nil {
 		t.Fatal(err)
 	}

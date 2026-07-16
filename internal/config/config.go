@@ -25,6 +25,7 @@ type Config struct {
 
 	LLMProvider string
 	LLMModel    string
+	LLMBaseURL  string
 
 	PollInterval          time.Duration
 	StuckTimeout          time.Duration
@@ -42,6 +43,7 @@ func Load() (Config, error) {
 		OCRServiceURL: getenv("OCR_SERVICE_URL", "http://localhost:9090"),
 		LLMProvider:   getenv("LLM_PROVIDER", "anthropic"),
 		LLMModel:      getenv("LLM_MODEL", "claude-sonnet-5"),
+		LLMBaseURL:    getenv("LLM_BASE_URL", "http://localhost:11434"),
 	}
 	if cfg.DatabaseURL == "" {
 		return Config{}, fmt.Errorf("DATABASE_URL is required")

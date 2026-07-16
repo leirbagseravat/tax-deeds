@@ -21,7 +21,11 @@ type Client struct {
 // New connects to GCS and ensures the bucket exists (creating it only in
 // emulator/dev setups where it is missing; production buckets pre-exist).
 func New(ctx context.Context, bucket string) (*Client, error) {
-	c, err := storage.NewClient(ctx)
+	// JSON reads: fake-gcs-server only serves the default XML-style download
+	// path when the request Host matches its -public-host, which breaks
+	// clients that reach the emulator under a different hostname (e.g. the
+	// dockerized OCR worker via gcs:4443). The JSON API is host-agnostic.
+	c, err := storage.NewClient(ctx, storage.WithJSONReads())
 	if err != nil {
 		return nil, fmt.Errorf("gcs client: %w", err)
 	}

@@ -43,14 +43,17 @@ func IsTransient(err error) bool {
 	return errors.Is(err, ErrTransient)
 }
 
-// New builds the Extractor strategy selected by provider.
-func New(provider, model string) (Extractor, error) {
+// New builds the Extractor strategy selected by provider. baseURL is only
+// used by providers that talk to a self-hosted server (ollama).
+func New(provider, model, baseURL string) (Extractor, error) {
 	switch provider {
 	case "anthropic":
 		return newLangChainAnthropic(model)
+	case "ollama":
+		return newLangChainOllama(model, baseURL)
 	case "stub":
 		return newStub(), nil
 	default:
-		return nil, fmt.Errorf("unknown LLM provider %q (want anthropic or stub)", provider)
+		return nil, fmt.Errorf("unknown LLM provider %q (want anthropic, ollama or stub)", provider)
 	}
 }
