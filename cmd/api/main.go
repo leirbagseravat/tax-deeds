@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -40,7 +41,22 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	log := logger.New(cfg.LogLevel)
+	log, logShutdown, err := logger.NewWithOTLP(ctx, logger.Options{
+		Level:        cfg.LogLevel,
+		Service:      "mortgage-api",
+		Environment:  cfg.Environment,
+		OTLPEndpoint: cfg.OTLPEndpoint,
+	})
+	if err != nil {
+		return err
+	}
+	defer func() {
+		flushCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := logShutdown(flushCtx); err != nil {
+			fmt.Fprintln(os.Stderr, "log flush:", err)
+		}
+	}()
 
 	pool, err := store.NewPool(ctx, cfg.DatabaseURL)
 	if err != nil {

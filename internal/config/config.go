@@ -13,6 +13,9 @@ type Config struct {
 	Port     string
 	LogLevel string
 
+	Environment  string // deployment.environment resource attribute
+	OTLPEndpoint string // OTLP/gRPC log collector; empty disables log shipping
+
 	DatabaseURL string
 
 	GCSBucket string
@@ -38,6 +41,8 @@ func Load() (Config, error) {
 	cfg := Config{
 		Port:          getenv("PORT", "8080"),
 		LogLevel:      getenv("LOG_LEVEL", "info"),
+		Environment:   getenv("APP_ENV", "dev"),
+		OTLPEndpoint:  os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
 		DatabaseURL:   os.Getenv("DATABASE_URL"),
 		GCSBucket:     getenv("GCS_BUCKET", "matriculas"),
 		OCRServiceURL: getenv("OCR_SERVICE_URL", "http://localhost:9090"),

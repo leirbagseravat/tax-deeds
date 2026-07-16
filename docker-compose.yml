@@ -38,6 +38,11 @@ services:
       GLM_MODEL: ${GLM_MODEL:-}
       GLM_API_KEY: ${GLM_API_KEY:-}
       ZHIPU_API_KEY: ${ZHIPU_API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_ENV: ${APP_ENV:-dev}
+      # Host-published OTLP port of the ../collector stack, via the host
+      # gateway; empty keeps the worker stderr-only.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OCR_OTLP_ENDPOINT:-}
     ports:
       - "9090:9090"
     extra_hosts:

@@ -6,7 +6,9 @@
 //
 // Env: DATABASE_URL (use the ocr_service role), PORT (default 9090),
 // OCR_ENGINE (default stub), OCR_PAGE_CONCURRENCY (default 2),
-// OCR_JOB_TIMEOUT (default 8m), OCR_MODEL_TIMEOUT (default 120s).
+// OCR_JOB_TIMEOUT (default 8m), OCR_MODEL_TIMEOUT (default 120s),
+// LOG_LEVEL (default info), APP_ENV (default dev),
+// OTEL_EXPORTER_OTLP_ENDPOINT (optional; ships logs to an OTLP collector).
 // Stub only: DELAY (default 2s), FAIL_RATE (0..1, default 0).
 // glm: GLM_BASE_URL (required), GLM_MODEL (default glm-ocr), GLM_API_KEY.
 // glm-maas: ZHIPU_API_KEY (required), ZHIPU_BASE_URL.
@@ -14,30 +16,56 @@ package main
 
 import (
 	"context"
-	"log/slog"
+	"errors"
+	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"mortgage/internal/clients/gcs"
 	"mortgage/internal/ocrengine"
+	"mortgage/pkg/logger"
 )
 
 func main() {
-	log := slog.New(slog.NewJSONHandler(os.Stderr, nil))
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	log, logShutdown, err := logger.NewWithOTLP(ctx, logger.Options{
+		Level:        getenv("LOG_LEVEL", "info"),
+		Service:      "mortgage-ocr",
+		Environment:  getenv("APP_ENV", "dev"),
+		OTLPEndpoint: os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
+	})
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "logger:", err)
+		os.Exit(1)
+	}
+	flush := func() {
+		flushCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := logShutdown(flushCtx); err != nil {
+			fmt.Fprintln(os.Stderr, "log flush:", err)
+		}
+	}
+	fatal := func(msg string, args ...any) {
+		log.Error(msg, args...)
+		flush()
+		os.Exit(1)
+	}
 
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		log.Error("DATABASE_URL is required")
-		os.Exit(1)
+		fatal("DATABASE_URL is required")
 	}
-	pool, err := pgxpool.New(context.Background(), databaseURL)
+	pool, err := pgxpool.New(ctx, databaseURL)
 	if err != nil {
-		log.Error("connect", "error", err)
-		os.Exit(1)
+		fatal("connect", "error", err)
 	}
 
 	engineName := getenv("OCR_ENGINE", "stub")
@@ -53,16 +81,14 @@ func main() {
 		Logger:       log,
 	})
 	if err != nil {
-		log.Error("build engine", "error", err)
-		os.Exit(1)
+		fatal("build engine", "error", err)
 	}
 
 	var fetch imageFetcher
 	if engine.NeedsImage() {
-		d, err := gcs.NewDownloader(context.Background())
+		d, err := gcs.NewDownloader(ctx)
 		if err != nil {
-			log.Error("gcs downloader", "error", err)
-			os.Exit(1)
+			fatal("gcs downloader", "error", err)
 		}
 		fetch = d
 	}
@@ -79,11 +105,30 @@ func main() {
 	mux.HandleFunc("POST /v1/ocr-jobs", w.handleJob)
 
 	port := getenv("PORT", "9090")
-	log.Info("ocr worker listening", "port", port, "engine", engine.Name())
-	if err := http.ListenAndServe(":"+port, mux); err != nil {
-		log.Error("serve", "error", err)
-		os.Exit(1)
+	srv := &http.Server{Addr: ":" + port, Handler: mux}
+
+	errCh := make(chan error, 1)
+	go func() {
+		log.Info("ocr worker listening", "port", port, "engine", engine.Name())
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errCh <- err
+		}
+	}()
+
+	select {
+	case err := <-errCh:
+		fatal("serve", "error", err)
+	case <-ctx.Done():
 	}
+
+	log.Info("shutting down")
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Warn("shutdown", "error", err)
+	}
+	pool.Close()
+	flush()
 }
 
 func getenv(key, fallback string) string {
