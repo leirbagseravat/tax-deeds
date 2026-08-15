@@ -21,6 +21,36 @@ Three binaries plus local infra:
 Local infra (via `docker-compose.yml`): **Postgres 17** and
 **`fake-gcs-server`** (a Google Cloud Storage emulator for uploaded files).
 
+```mermaid
+flowchart LR
+    client([Client])
+    subgraph api["cmd/api :8080"]
+        ingest["ingest"]
+        poller["extraction poller"]
+    end
+    worker["cmd/ocr :9090"]
+    pg[("Postgres")]
+    gcs[("GCS / fake-gcs")]
+    engines["OCR engine<br/>stub · glm · glm-maas"]
+    llm["LLM provider<br/>anthropic · ollama · stub"]
+
+    client -->|"POST /documents (PDF)"| ingest
+    client -->|"GET status · matricula"| api
+    ingest -->|"PDF + page PNGs"| gcs
+    ingest -->|"documents · pages"| pg
+    ingest -->|"POST /v1/ocr-jobs"| worker
+    worker -->|"page PNGs"| gcs
+    worker --> engines
+    worker -->|"ocr_results"| pg
+    poller -->|"claim ocr_done"| pg
+    poller --> llm
+    poller -->|"matrícula aggregate"| pg
+```
+
+For the full picture — service-interaction, sequence, and state-machine
+diagrams plus a stage-by-stage walkthrough of an analysis — see
+**[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)**.
+
 ## Prerequisites
 
 - Go 1.26

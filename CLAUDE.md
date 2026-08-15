@@ -4,11 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-This is a new, empty Go module (`module mortgage`, Go 1.26.4) — no source code exists yet. There is no Makefile, README, or CI config. When adding the first code, follow the layout below rather than inventing an alternative structure.
+`mortgage` (Go 1.26.4) is a working orchestrator for analysing Brazilian
+real-estate registry documents (*matrículas*): `upload → ingest → OCR → LLM
+extraction → read API`. It has three binaries (`cmd/api`, `cmd/ocr`,
+`cmd/migrate`), a Makefile, `docker-compose.yml`, and a full README. For the
+architecture, the analysis flow, and diagrams, read **`docs/ARCHITECTURE.md`**
+(and `README.md` for setup/config). Follow the layout below when adding code.
 
 ## Commands
 
-No Makefile exists yet; use plain `go` tooling until one is added:
+Use the Makefile targets (`make build|test|vet|fmt|run|up|migrate`) or plain
+`go` tooling:
 
 - Build: `go build ./...`
 - Run all tests: `go test ./...`
