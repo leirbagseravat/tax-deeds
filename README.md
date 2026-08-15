@@ -98,3 +98,59 @@ make run LLM_PROVIDER=stub  # start the API on :8080
   `store`, `clients` (`gcs`, `ocr`, `llm`), `ocrengine`, `config`, `dto`.
 - `pkg/` — reusable, domain-free utilities (`logger`, `middleware`, `response`).
 - `docs/plans/` — the design docs the implementation followed.
+
+## Next steps
+
+### RAG-backed extraction
+
+Today the extraction step (`internal/services/extraction/`) ships the full OCR
+text plus a fixed system prompt to the LLM provider. That prompt (`prompt.go`,
+`PromptVersion "v1"`) carries every rule, enum vocabulary, and example inline —
+so the token count grows on every call, and it still can't capture every
+cartório's quirks.
+
+The natural improvement is to move that domain knowledge behind a **retrieval
+step (RAG)**. Build a knowledge base of registry conventions — enum definitions,
+cartório-specific layouts, legal terminology (registros vs. averbações, tipos de
+ônus), and curated few-shot examples of hard cases — embedded into a vector
+store. At extraction time, embed the document's OCR text, retrieve only the
+handful of most relevant snippets, and inject *those* into the prompt instead of
+shipping the entire rulebook every time.
+
+```mermaid
+flowchart LR
+    ocr["OCR text for a document"]
+    kb[("Knowledge base<br/>registry conventions ·<br/>cartório templates ·<br/>few-shot examples")]
+
+    subgraph retrieval["Retrieval (new)"]
+        embed["Embed OCR text"]
+        search["Similarity search<br/>top-k relevant snippets"]
+    end
+
+    prompt["Prompt = OCR text +<br/>retrieved context only"]
+    llm["LLM provider<br/>internal/clients/llm"]
+    out["ExtractedMatricula JSON"]
+
+    ocr --> embed --> search
+    kb --> search
+    search --> prompt
+    ocr --> prompt
+    prompt --> llm --> out
+    llm -.->|"reviewed extractions<br/>feed back as examples"| kb
+```
+
+Why it helps:
+
+- **More precise.** Extraction is grounded in real, matching examples and the
+  exact conventions of the cartório that issued the document, rather than the
+  model's priors.
+- **Fewer tokens.** The static prompt shrinks to a small, retrieved context —
+  you pay for the few examples that matter, not all of them — lowering cost and
+  latency per document.
+- **Improves over time.** The append-only `extractions` table already stores
+  every raw LLM response; reviewed extractions can feed curated examples back
+  into the knowledge base.
+
+Where it slots in: a retriever sits between the OCR text and the `Extractor`
+(`internal/clients/llm/`), so the strategy interface and the rest of the
+pipeline stay unchanged.
