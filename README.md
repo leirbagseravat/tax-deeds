@@ -77,28 +77,6 @@ make migrate                # apply DB migrations
 make run LLM_PROVIDER=stub  # start the API on :8080
 ```
 
-## API endpoints
-
-| Method & path | Description |
-|---------------|-------------|
-| `GET /healthz` | Liveness check |
-| `GET /readyz` | Readiness check |
-| `POST /api/v1/documents` | Upload a matrícula PDF (multipart `file`) |
-| `GET /api/v1/documents/{id}` | Document status |
-| `GET /api/v1/documents/{id}/ocr` | OCR result for the document |
-| `GET /api/v1/documents/{id}/matricula` | Full extracted matrícula aggregate |
-| `GET /api/v1/matriculas/{id}/proprietarios` | Owners + cadeia dominial |
-| `GET /api/v1/matriculas/{id}/atos?kind=averbacao` | Acts (filter by `kind`) |
-| `GET /api/v1/matriculas/{id}/onus?status=ativo` | Liens (filter by `status`) |
-
-## Project layout
-
-- `cmd/` — entrypoints (`api`, `ocr`, `migrate`).
-- `internal/` — private implementation: `handlers`, `routes`, `services`,
-  `store`, `clients` (`gcs`, `ocr`, `llm`), `ocrengine`, `config`, `dto`.
-- `pkg/` — reusable, domain-free utilities (`logger`, `middleware`, `response`).
-- `docs/plans/` — the design docs the implementation followed.
-
 ## Next steps
 
 ### RAG-backed extraction
@@ -154,3 +132,25 @@ Why it helps:
 Where it slots in: a retriever sits between the OCR text and the `Extractor`
 (`internal/clients/llm/`), so the strategy interface and the rest of the
 pipeline stay unchanged.
+
+## API endpoints
+
+| Method & path | Description |
+|---------------|-------------|
+| `GET /healthz` | Liveness check |
+| `GET /readyz` | Readiness check |
+| `POST /api/v1/documents` | Upload a matrícula PDF (multipart `file`) |
+| `GET /api/v1/documents/{id}` | Document status |
+| `GET /api/v1/documents/{id}/ocr` | OCR result for the document |
+| `GET /api/v1/documents/{id}/matricula` | Full extracted matrícula aggregate |
+| `GET /api/v1/matriculas/{id}/proprietarios` | Owners + cadeia dominial |
+| `GET /api/v1/matriculas/{id}/atos?kind=averbacao` | Acts (filter by `kind`) |
+| `GET /api/v1/matriculas/{id}/onus?status=ativo` | Liens (filter by `status`) |
+
+## Project layout
+
+- `cmd/` — entrypoints (`api`, `ocr`, `migrate`).
+- `internal/` — private implementation: `handlers`, `routes`, `services`,
+  `store`, `clients` (`gcs`, `ocr`, `llm`), `ocrengine`, `config`, `dto`.
+- `pkg/` — reusable, domain-free utilities (`logger`, `middleware`, `response`).
+- `docs/plans/` — the design docs the implementation followed.
