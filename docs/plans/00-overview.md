@@ -2,7 +2,7 @@
 
 ## Context
 
-Build a product that analyses Brazilian real estate registry documents (matrícula de imóvel). This repo (`mortgage`, empty Go 1.26 module) is the **Go orchestrator**: it accepts a matrícula PDF upload, converts pages to images, stores them in Google Cloud Storage, persists metadata to Postgres, triggers a separate Python OCR service over HTTP (out of scope for this repo, contract defined here), and — once OCR text lands in Postgres — calls an LLM to extract structured registry entities (proprietários, registros, averbações, ônus) and exposes them via a query API.
+Build a product that analyses Brazilian real estate registry documents (matrícula de imóvel). This repo (`tax-deeds`, empty Go 1.26 module) is the **Go orchestrator**: it accepts a matrícula PDF upload, converts pages to images, stores them in Google Cloud Storage, persists metadata to Postgres, triggers a separate Python OCR service over HTTP (out of scope for this repo, contract defined here), and — once OCR text lands in Postgres — calls an LLM to extract structured registry entities (proprietários, registros, averbações, ônus) and exposes them via a query API.
 
 User-confirmed decisions:
 - **No message queue** — Go fires an async HTTP POST to the Python OCR service and returns `202`.

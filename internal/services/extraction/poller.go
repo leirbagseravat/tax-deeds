@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"time"
 
-	"mortgage/internal/services/ingest"
-	"mortgage/internal/store"
+	"tax-deeds/internal/services/ingest"
+	"tax-deeds/internal/store"
 )
 
 // Poller drives extraction: it claims ocr_done documents for the LLM and, as

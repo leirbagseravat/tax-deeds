@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"mortgage/internal/dto"
-	"mortgage/internal/store"
+	"tax-deeds/internal/dto"
+	"tax-deeds/internal/store"
 )
 
 // NotReadyError means the document exists but its matrícula has not been

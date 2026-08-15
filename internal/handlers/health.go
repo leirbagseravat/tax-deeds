@@ -6,7 +6,7 @@ import (
 	"context"
 	"net/http"
 
-	"mortgage/pkg/response"
+	"tax-deeds/pkg/response"
 )
 
 // Pinger reports whether a dependency (the database) is reachable.

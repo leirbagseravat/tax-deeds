@@ -9,9 +9,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"mortgage/internal/dto"
-	"mortgage/internal/services/matriculas"
-	"mortgage/internal/store"
+	"tax-deeds/internal/dto"
+	"tax-deeds/internal/services/matriculas"
+	"tax-deeds/internal/store"
 )
 
 // fakeMatriculaReader returns canned responses, or err when set.

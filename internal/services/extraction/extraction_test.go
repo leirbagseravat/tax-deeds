@@ -12,9 +12,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"mortgage/internal/clients/llm"
-	"mortgage/internal/dto"
-	"mortgage/internal/store"
+	"tax-deeds/internal/clients/llm"
+	"tax-deeds/internal/dto"
+	"tax-deeds/internal/store"
 )
 
 func testPool(t *testing.T) *pgxpool.Pool {

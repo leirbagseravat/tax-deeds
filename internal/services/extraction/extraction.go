@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"mortgage/internal/clients/llm"
-	"mortgage/internal/store"
+	"tax-deeds/internal/clients/llm"
+	"tax-deeds/internal/store"
 )
 
 // Service turns OCR text into the persisted matrícula aggregate.

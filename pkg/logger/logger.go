@@ -27,7 +27,7 @@ func New(level string) *slog.Logger {
 // OTLPEndpoint is set, also ships records to an OTLP/gRPC collector.
 type Options struct {
 	Level        string // "debug", "info", "warn", "error"; default info
-	Service      string // service.name resource attribute, e.g. "mortgage-api"
+	Service      string // service.name resource attribute, e.g. "tax-deeds-api"
 	Environment  string // deployment.environment resource attribute; default "dev"
 	OTLPEndpoint string // e.g. "http://localhost:4317"; empty disables OTLP
 }

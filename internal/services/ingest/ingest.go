@@ -14,8 +14,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"mortgage/internal/services/pdfconvert"
-	"mortgage/internal/store"
+	"tax-deeds/internal/services/pdfconvert"
+	"tax-deeds/internal/store"
 )
 
 // Storage is the slice of the GCS client the pipeline needs.

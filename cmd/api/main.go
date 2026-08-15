@@ -11,19 +11,19 @@ import (
 	"syscall"
 	"time"
 
-	"mortgage/internal/clients/gcs"
-	"mortgage/internal/clients/llm"
-	"mortgage/internal/clients/ocr"
-	"mortgage/internal/config"
-	"mortgage/internal/handlers"
-	"mortgage/internal/routes"
-	"mortgage/internal/services/extraction"
-	"mortgage/internal/services/ingest"
-	"mortgage/internal/services/matriculas"
-	"mortgage/internal/services/pdfconvert"
-	"mortgage/internal/store"
-	"mortgage/pkg/logger"
-	"mortgage/pkg/middleware"
+	"tax-deeds/internal/clients/gcs"
+	"tax-deeds/internal/clients/llm"
+	"tax-deeds/internal/clients/ocr"
+	"tax-deeds/internal/config"
+	"tax-deeds/internal/handlers"
+	"tax-deeds/internal/routes"
+	"tax-deeds/internal/services/extraction"
+	"tax-deeds/internal/services/ingest"
+	"tax-deeds/internal/services/matriculas"
+	"tax-deeds/internal/services/pdfconvert"
+	"tax-deeds/internal/store"
+	"tax-deeds/pkg/logger"
+	"tax-deeds/pkg/middleware"
 )
 
 func main() {
@@ -43,7 +43,7 @@ func run() error {
 	}
 	log, logShutdown, err := logger.NewWithOTLP(ctx, logger.Options{
 		Level:        cfg.LogLevel,
-		Service:      "mortgage-api",
+		Service:      "tax-deeds-api",
 		Environment:  cfg.Environment,
 		OTLPEndpoint: cfg.OTLPEndpoint,
 	})

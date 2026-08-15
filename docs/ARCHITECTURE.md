@@ -1,6 +1,6 @@
 # Architecture & Analysis Flow
 
-This document explains how **mortgage** is put together and how a single
+This document explains how **tax-deeds** is put together and how a single
 document analysis travels through the system end to end. It complements the
 [`README.md`](../README.md) (reference material — config, endpoints, make
 targets) with the *big picture* and the *why*.

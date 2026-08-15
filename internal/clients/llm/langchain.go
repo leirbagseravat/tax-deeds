@@ -11,7 +11,7 @@ import (
 	lcanthropic "github.com/tmc/langchaingo/llms/anthropic"
 	lcollama "github.com/tmc/langchaingo/llms/ollama"
 
-	"mortgage/internal/dto"
+	"tax-deeds/internal/dto"
 )
 
 // langChain is the LangChain-backed strategy. It relies on prompt-enforced

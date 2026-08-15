@@ -4,7 +4,7 @@ package routes
 import (
 	"net/http"
 
-	"mortgage/internal/handlers"
+	"tax-deeds/internal/handlers"
 )
 
 // Handlers groups the handler dependencies needed to build the mux.

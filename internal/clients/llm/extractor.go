@@ -11,7 +11,7 @@ import (
 	"errors"
 	"fmt"
 
-	"mortgage/internal/dto"
+	"tax-deeds/internal/dto"
 )
 
 // Usage reports token consumption of one extraction call.

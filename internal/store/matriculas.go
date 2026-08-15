@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"mortgage/internal/dto"
+	"tax-deeds/internal/dto"
 )
 
 // ExtractionMeta records the provenance of one LLM extraction run.

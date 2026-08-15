@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"mortgage/internal/dto"
+	"tax-deeds/internal/dto"
 )
 
 // testPool connects to TEST_DATABASE_URL, or skips the test when unset.

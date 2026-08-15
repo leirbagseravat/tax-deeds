@@ -5,7 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 
-	"mortgage/internal/dto"
+	"tax-deeds/internal/dto"
 )
 
 //go:embed stub_fixture.json

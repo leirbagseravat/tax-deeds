@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"mortgage/internal/store"
+	"tax-deeds/internal/store"
 )
 
 type fakeIngestor struct {

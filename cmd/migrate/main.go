@@ -16,14 +16,14 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 
-	"mortgage/internal/store/migrations"
-	"mortgage/pkg/logger"
+	"tax-deeds/internal/store/migrations"
+	"tax-deeds/pkg/logger"
 )
 
 func main() {
 	log, logShutdown, err := logger.NewWithOTLP(context.Background(), logger.Options{
 		Level:        getenv("LOG_LEVEL", "info"),
-		Service:      "mortgage-migrate",
+		Service:      "tax-deeds-migrate",
 		Environment:  getenv("APP_ENV", "dev"),
 		OTLPEndpoint: os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
 	})

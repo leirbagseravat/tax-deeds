@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"net/http"
 
-	"mortgage/internal/dto"
-	"mortgage/internal/store"
-	"mortgage/pkg/response"
+	"tax-deeds/internal/dto"
+	"tax-deeds/internal/store"
+	"tax-deeds/pkg/response"
 )
 
 // OCRReader is the slice of the ingest service the OCR endpoint needs.

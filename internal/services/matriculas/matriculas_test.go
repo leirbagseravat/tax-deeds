@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"mortgage/internal/dto"
-	"mortgage/internal/store"
+	"tax-deeds/internal/dto"
+	"tax-deeds/internal/store"
 )
 
 func TestOwnershipChain(t *testing.T) {

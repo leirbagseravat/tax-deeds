@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:17
     environment:
-      POSTGRES_USER: mortgage
-      POSTGRES_PASSWORD: mortgage
-      POSTGRES_DB: mortgage
+      POSTGRES_USER: tax_deeds
+      POSTGRES_PASSWORD: tax_deeds
+      POSTGRES_DB: tax_deeds
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mortgage"]
+      test: ["CMD-SHELL", "pg_isready -U tax_deeds"]
       interval: 2s
       timeout: 2s
       retries: 15
@@ -30,7 +30,7 @@ services:
       context: .
       dockerfile: Dockerfile.ocr
     environment:
-      DATABASE_URL: postgres://ocr_service:ocr_service@postgres:5432/mortgage?sslmode=disable
+      DATABASE_URL: postgres://ocr_service:ocr_service@postgres:5432/tax_deeds?sslmode=disable
       PORT: "9090"
       OCR_ENGINE: ${OCR_ENGINE:-stub}
       STORAGE_EMULATOR_HOST: gcs:4443

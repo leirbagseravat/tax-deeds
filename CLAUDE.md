@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-`mortgage` (Go 1.26.4) is a working orchestrator for analysing Brazilian
+`tax-deeds` (Go 1.26.4) is a working orchestrator for analysing Brazilian
 real-estate registry documents (*matrículas*): `upload → ingest → OCR → LLM
 extraction → read API`. It has three binaries (`cmd/api`, `cmd/ocr`,
 `cmd/migrate`), a Makefile, `docker-compose.yml`, and a full README. For the

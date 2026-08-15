@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"mortgage/internal/ocrengine"
+	"tax-deeds/internal/ocrengine"
 )
 
 type pageRef struct {

@@ -27,9 +27,9 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"mortgage/internal/clients/gcs"
-	"mortgage/internal/ocrengine"
-	"mortgage/pkg/logger"
+	"tax-deeds/internal/clients/gcs"
+	"tax-deeds/internal/ocrengine"
+	"tax-deeds/pkg/logger"
 )
 
 func main() {
@@ -38,7 +38,7 @@ func main() {
 
 	log, logShutdown, err := logger.NewWithOTLP(ctx, logger.Options{
 		Level:        getenv("LOG_LEVEL", "info"),
-		Service:      "mortgage-ocr",
+		Service:      "tax-deeds-ocr",
 		Environment:  getenv("APP_ENV", "dev"),
 		OTLPEndpoint: os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
 	})

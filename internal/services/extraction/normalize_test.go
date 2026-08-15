@@ -3,7 +3,7 @@ package extraction
 import (
 	"testing"
 
-	"mortgage/internal/dto"
+	"tax-deeds/internal/dto"
 )
 
 func TestNormalizeDoc(t *testing.T) {

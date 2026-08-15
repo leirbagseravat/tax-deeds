@@ -6,10 +6,10 @@ import (
 	"log/slog"
 	"net/http"
 
-	"mortgage/internal/dto"
-	"mortgage/internal/services/matriculas"
-	"mortgage/internal/store"
-	"mortgage/pkg/response"
+	"tax-deeds/internal/dto"
+	"tax-deeds/internal/services/matriculas"
+	"tax-deeds/internal/store"
+	"tax-deeds/pkg/response"
 )
 
 // MatriculaReader is the slice of the matrículas service these endpoints need.
