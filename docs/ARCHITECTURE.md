@@ -145,7 +145,7 @@ sequenceDiagram
     POLL->>DB: ClaimForExtraction — ocr_done → extracting (SKIP LOCKED)
     POLL->>DB: read ocr_results text
     POLL->>LLM: ExtractMatricula (system prompt + OCR text)
-    LLM-->>POLL: JSON (enum-validated; 1 repair round on parse failure)
+    LLM-->>POLL: JSON (enum-validated, 1 repair round on parse failure)
     POLL->>DB: SaveAggregate (extraction + matrícula + atos/partes/owners/liens)
     POLL->>DB: extracting → extracted (guarded)
 
