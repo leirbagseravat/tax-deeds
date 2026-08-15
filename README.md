@@ -1,8 +1,18 @@
 # tax-deeds
 
-A pipeline for processing Brazilian real-estate **matrículas**. You upload a
-matrícula PDF; the service runs OCR over its pages, extracts structured data
-from the text with an LLM, and exposes a read/query API over the result.
+**Distressed real estate is a large market in Brazil.** Around half of the adult
+population carries overdue debt, much of it tied to property bought with
+financing. When a borrower defaults, the lender repossesses the property and
+needs to sell it fast — so repossessed units routinely list well below market
+price. The catch for a buyer is due diligence: every lien, prior owner, and
+registered act lives in the property's **matrícula**, a dense registry document
+that is slow and error-prone to read by hand.
+
+`tax-deeds` turns that document into structured, queryable data. You upload a
+matrícula PDF; the service runs OCR over its pages, extracts the registry
+entities — owners, acts (registros/averbações), and liens (ônus) — with an LLM,
+and exposes a read/query API over the result, so a repossessed property can be
+vetted in seconds instead of hours.
 
 ```
 upload → ingest → OCR → LLM extraction → read API
